@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  rsu-cluster:
+    build: ./rsu-simulator
+    ports:
+      - "5000:5000"
+      - "8000:8000"  # Prometheus metrics
+    volumes:
+      - ./rsu-simulator:/app
+    networks:
+      - vanet-net
+
+  attacker:
+    build: ./attacker-simulator
+    depends_on:
+      - rsu-cluster
+    volumes:
+      - ./attacker-simulator:/app
+    networks:
+      - vanet-net
+
+  honeypot-agent:
+    build: ./ppo-agent
+    depends_on:
+      - rsu-cluster
+    volumes:
+      - ./ppo-agent:/app
+      - ./results:/app/results  # 保存训练结果
+      - ./deployment_results:/app/deployment_results
+    networks:
+      - vanet-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - vanet-net
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./monitoring/grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - grafana-storage:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - vanet-net
+
+networks:
+  vanet-net:
+    driver: bridge
+
+volumes:
+  grafana-storage:

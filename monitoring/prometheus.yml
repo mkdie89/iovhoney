@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'rsu-cluster'
+    static_configs:
+      - targets: ['rsu-cluster:8000']
+  - job_name: 'honeypot-agent'
+    static_configs:
+      - targets: ['honeypot-agent:8000']  # 如果PPO代理也暴露指标
